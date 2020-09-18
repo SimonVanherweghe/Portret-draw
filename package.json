@@ -1,0 +1,13 @@
+{
+  "name": "portret-draw",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "cloudinary": "^1.23.0",
+    "dotenv": "^8.2.0",
+    "jsdom": "^16.4.0",
+    "svgcode": "^1.0.1",
+    "xmldom": "^0.3.0"
+  }
+}
