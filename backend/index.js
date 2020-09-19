@@ -87,13 +87,22 @@ const createLines = async (source) => {
   });
 };
 
+const writeFile = (path, content) => {
+  fs.writeFile(path, content, (err) => {
+    if (err) {
+      return console.log(err);
+    }
+    console.log("The file was saved!");
+  });
+};
+
 const run = async () => {
   const photo = await getLatest();
   const url = await getImageUrl(photo.id);
   console.log("url", url);
   await downloadUrl(url, `./out/${photo.name}.jpg`);
   const lines = await createLines(`./out/${photo.name}.jpg`);
-  console.log(lines);
+  writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
 };
 
 run();
