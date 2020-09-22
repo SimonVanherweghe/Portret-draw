@@ -15,7 +15,7 @@ if (queue.length > 0) {
 
   lines = scale(lines, scaleFactor, scaleFactor);
   console.log(getBounds2d(lines));
-  lines = addCropMarks(lines, { paddingBottom: 20, width: 75, height: 75 });
+  lines = addCropMarks(lines, { paddingBottom: 19, width: 75, height: 75 });
   console.log(getBounds2d(lines));
   const commands = linesToGcode(lines, 2000);
   try {

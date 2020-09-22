@@ -6,12 +6,49 @@
     <title>Document</title>
   </head>
   <body>
+    <header>
+      <h1>Laat je portet tekenen door een robot</h1>
+    </header>
     <main>
-      <section>
+      <section class="upload">
         <header>
-          <h1>Upload</h1>
+          <p>Stap 1</p>
+          <h2>Upload een selfie</h2>
         </header>
         <button>Upload</button>
+      </section>
+      <section class="form" hidden>
+        <form>
+          <header>
+            <h2>Bedankt voor de foto</h2>
+            <p>Wat zie je er goed uit.</p>
+            <p>
+              Als je hieronder jouw gegevens achterlaat, dan geef ik jou een
+              seintje als ik klaar ben met jouw portret.
+            </p>
+          </header>
+          <label for="input1">Naam</label>
+          <input type="text" id="input1" name="input1" size="20" />
+          <label for="input1">E-mail</label>
+          <input type="email" id="email" name="email" size="20" />
+
+          <button type="submit">Verzenden</button>
+        </form>
+      </section>
+      <hr />
+      <section>
+        <header>
+          <p>Stap 2</p>
+          <h2>Even wachten...</h2>
+          <p>Het kan al snel 20 minuten duren vooraleer er eentje klaar is.</p>
+        </header>
+      </section>
+      <hr />
+      <section>
+        <header>
+          <p>Stap 3</p>
+          <h2>Kom je portet halen</h2>
+        </header>
       </section>
     </main>
     <script
