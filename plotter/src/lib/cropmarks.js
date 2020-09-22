@@ -1,17 +1,39 @@
-const {getBounds2d} = require('./get-bounds-2d');
-const {textToLines} = require('./text');
+const { getBounds2d } = require("./get-bounds-2d");
+const { textToLines } = require("./text");
 
-const addCropMarks = (lines, includeDate = false) => {
-  const length = 5;
-  const gap = 2;
+const addCropMarks = (
+  lines,
+  {
+    includeDate = false,
+    marksLength = 5,
+    marksGap = 2,
+    paddingTop = 3,
+    paddingRight = 3,
+    paddingBottom = 3,
+    paddingLeft = 3,
+    width = 0,
+    height = 0,
+  }
+) => {
   const padding = 3;
-  const {minX, maxX, minY, maxY} = getBounds2d(lines);
+  let minX, minY, maxX, maxY;
+  if (width === 0 || height === 0) {
+    let { minX, maxX, minY, maxY } = getBounds2d(lines);
+  } else {
+    minX = 0;
+    minY = 0;
+    maxX = width;
+    maxY = height;
+  }
 
-  //if (minX < length || minY < length) {
-  lines = lines.map(line =>
+  console.log("cropmarks", { minX, maxX, minY, maxY });
+
+
+  //if (minX < marksLength || minY < marksLength) {
+  lines = lines.map((line) =>
     line.map(([x, y]) => [
-      x + (length - minX) + padding,
-      y + (length - minY) + padding
+      x + (marksLength - minX) + paddingLeft,
+      y + (marksLength - minY) + paddingTop,
     ])
   );
   //}
@@ -19,44 +41,68 @@ const addCropMarks = (lines, includeDate = false) => {
   const marks = [
     [
       // top left H
-      [minX, minY + length],
-      [minX + length - gap, minY + length]
+      [minX, minY + marksLength],
+      [minX + marksLength - marksGap, minY + marksLength],
     ],
     [
       // top left V
-      [minX + length, minY],
-      [minX + length, minY + length - gap]
+      [minX + marksLength, minY],
+      [minX + marksLength, minY + marksLength - marksGap],
     ],
     [
       // bottom  right H
-      [maxX + length + gap + padding * 2, maxY + length + padding * 2],
-      [maxX + length * 2 + padding * 2, maxY + length + padding * 2]
+      [
+        maxX + marksLength + marksGap + paddingLeft + paddingRight,
+        maxY + marksLength + paddingTop + paddingBottom,
+      ],
+      [
+        maxX + marksLength * 2 + paddingLeft + paddingRight,
+        maxY + marksLength + paddingTop + paddingBottom,
+      ],
     ],
     [
       // bottom  right V
-      [maxX + length + padding * 2, maxY + gap + length + padding * 2],
-      [maxX + length + padding * 2, maxY + length * 2 + padding * 2]
+      [
+        maxX + marksLength + paddingLeft + paddingRight,
+        maxY + marksGap + marksLength + paddingTop + paddingBottom,
+      ],
+      [
+        maxX + marksLength + paddingLeft + paddingRight,
+        maxY + marksLength * 2 + paddingTop + paddingBottom,
+      ],
     ],
     [
       // top  right H
-      [maxX + length + gap + padding * 2, minY + length],
-      [maxX + length * 2 + padding * 2, minY + length]
+      [
+        maxX + marksLength + marksGap + paddingLeft + paddingRight,
+        minY + marksLength,
+      ],
+      [maxX + marksLength * 2 + paddingLeft + paddingRight, minY + marksLength],
     ],
     [
       // top  right V
-      [maxX + length + padding * 2, minY],
-      [maxX + length + padding * 2, minY + length - gap]
+      [maxX + marksLength + paddingLeft + paddingRight, minY],
+      [
+        maxX + marksLength + paddingLeft + paddingRight,
+        minY + marksLength - marksGap,
+      ],
     ],
     [
       // bottom left H
-      [minX, maxY + length + padding * 2],
-      [minX + length - gap, maxY + length + padding * 2]
+      [minX, maxY + marksLength + paddingTop + paddingBottom],
+      [
+        minX + marksLength - marksGap,
+        maxY + marksLength + paddingTop + paddingBottom,
+      ],
     ],
     [
       // bottom left V
-      [minX + length, maxY + length + gap + padding * 2],
-      [minX + length, maxY + length * 2 + padding * 2]
-    ]
+      [
+        minX + marksLength,
+        maxY + marksLength + marksGap + paddingTop + paddingBottom,
+      ],
+      [minX + marksLength, maxY + marksLength * 2 + paddingTop + paddingBottom],
+    ],
   ];
 
   lines.unshift(...marks);
@@ -65,8 +111,8 @@ const addCropMarks = (lines, includeDate = false) => {
     const date = textToLines(
       new Date().toLocaleDateString(),
       0.12,
-      maxX + length + gap,
-      maxY + length * 2,
+      maxX + marksLength + marksGap,
+      maxY + marksLength * 2,
       true
     );
     lines.push(...date);
@@ -75,4 +121,4 @@ const addCropMarks = (lines, includeDate = false) => {
   return lines;
 };
 
-module.exports = {addCropMarks};
+module.exports = { addCropMarks };

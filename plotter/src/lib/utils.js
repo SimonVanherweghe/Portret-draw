@@ -36,4 +36,18 @@ const getQueue = (queuePath, extension) => {
   return filesWithStats;
 };
 
-module.exports = { getQueue };
+const move = (lines, moveX, moveY) =>
+  lines.map((line) =>
+    line.map((pair) => {
+      return [Math.round(pair[0] + moveX), Math.round(pair[1] + moveY)];
+    })
+  );
+
+const scale = (lines, scaleX = 1, scaleY = 1) =>
+  lines.map((line) =>
+    line.map((pair) => {
+      return [Math.round(pair[0] * scaleX), Math.round(pair[1] * scaleY)];
+    })
+  );
+
+module.exports = { getQueue, move, scale };

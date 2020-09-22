@@ -1,0 +1,1 @@
+rsync -avz -e  ssh plotter/ pi@192.168.0.109:plotter/ --exclude 'node_modules' --exclude 'yarn.lock'

@@ -117,4 +117,5 @@ dist
 
 linedraw/
 .vscode/
+backend/downloads/*
 backend/output/*

@@ -1,18 +1,18 @@
 function linesToGcode(lines, speed = 900) {
-  const absolutePositioning = 'G90';
-  const resetToZero = ['G92 X0', 'G92 Y0'];
-  const park = 'M03 S0';
-  const up = 'M03 S30';
-  const down = 'M03 S100';
+  const absolutePositioning = "G90";
+  const resetToZero = ["G92 X0", "G92 Y0"];
+  const park = "M03 S0";
+  const up = "M03 S30";
+  const down = "M03 S100";
   const goTo = ([x, y]) =>
     [
-      'G1',
-      typeof x === 'number' && `X${x}`,
-      typeof y === 'number' && `Y${y}`,
-      `F${speed}`
+      "G1",
+      typeof x === "number" && `X${x}`,
+      typeof y === "number" && `Y${y}`,
+      `F${speed}`,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(" ");
 
   const commands = [];
 
@@ -24,7 +24,7 @@ function linesToGcode(lines, speed = 900) {
 
     commands.push(goTo(firstPoint));
     commands.push(down);
-    const points = line.map(p => goTo(p));
+    const points = line.map((p) => goTo(p));
     commands.push(...points);
 
     if (nextLine) {
@@ -40,14 +40,19 @@ function linesToGcode(lines, speed = 900) {
     commands.push(up);
   }
 
+  /*
+    "$100=100.000",
+    "$101=100.000",
+    "$102=100.000",
+*/
   return [
     absolutePositioning,
     ...resetToZero,
     up,
     ...commands,
     park,
-    goTo([0, 0])
-  ].map(command => `${command}\r`);
+    goTo([0, 0]),
+  ].map((command) => `${command}\r`);
 }
 
-module.exports = {linesToGcode};
+module.exports = { linesToGcode };

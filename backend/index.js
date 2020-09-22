@@ -71,7 +71,7 @@ const createLines = async (source) => {
   return new Promise((resolve, reject) => {
     PythonShell.run(
       "./linedraw/convert.py",
-      { args: [source] },
+      { args: [source], pythonPath: "/usr/local/bin/python3" },
       (err, results) => {
         if (err) {
           reject(err);
@@ -97,12 +97,18 @@ const writeFile = (path, content) => {
 };
 
 const run = async () => {
+  console.log("Get latest...");
   const photo = await getLatest();
+  console.log("Get image url...");
   const url = await getImageUrl(photo.id);
   console.log("url", url);
-  await downloadUrl(url, `./out/${photo.name}.jpg`);
-  const lines = await createLines(`./out/${photo.name}.jpg`);
+  console.log("Download url...");
+  await downloadUrl(url, `./downloads/${photo.name}.jpg`);
+  console.log("create lines...");
+  const lines = await createLines(`./downloads/${photo.name}.jpg`);
+  console.log("write file...");
   writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
+  console.log("--DONE--");
 };
 
 run();
