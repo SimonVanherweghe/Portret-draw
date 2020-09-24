@@ -26,9 +26,6 @@ const addCropMarks = (
     maxY = height;
   }
 
-  console.log("cropmarks", { minX, maxX, minY, maxY });
-
-
   //if (minX < marksLength || minY < marksLength) {
   lines = lines.map((line) =>
     line.map(([x, y]) => [

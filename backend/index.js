@@ -5,8 +5,11 @@ const fs = require("fs");
 const { resolve } = require("path");
 const spawn = require("child_process").spawn;
 const { PythonShell } = require("python-shell");
+const store = require("data-store")({
+  path: process.cwd() + "/datastore.json",
+});
 
-const svgpath = "./parsed/test.svg";
+const { NodeSSH } = require("node-ssh");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -51,20 +54,20 @@ const svgToGcode = (svg) => {
   });
 };
 
-const getLatest = () => {
-  return new Promise((resolve, reject) => {
-    try {
-      cloudinary.api.resources((err, result) => {
-        if (err) {
-          reject(err);
-        }
-        const { public_id: id, asset_id: name } = result.resources[0];
-        resolve({ id, name });
-      });
-    } catch (e) {
-      reject(e);
-    }
-  });
+const getLatest = async (since) => {
+  try {
+    const result = await cloudinary.search
+      .expression("created_at>" + since)
+      .execute();
+
+    return result.resources.map((img) => ({
+      id: img.public_id,
+      name: img.filename,
+      created_at: img.created_at,
+    }));
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 const createLines = async (source) => {
@@ -97,17 +100,55 @@ const writeFile = (path, content) => {
 };
 
 const run = async () => {
+  const ssh = new NodeSSH();
+
+  ssh.connect({
+    host: "192.168.0.109",
+    username: "pi",
+    privateKey: "/Users/simonvanherweghe/.ssh/raspberrypi",
+    port: 22,
+    tryKeyboard: true,
+    onKeyboardInteractive(
+      name,
+      instructions,
+      instructionsLang,
+      prompts,
+      finish
+    ) {
+      console.log(name, prompts.join("\n"));
+    },
+  });
+
   console.log("Get latest...");
-  const photo = await getLatest();
-  console.log("Get image url...");
-  const url = await getImageUrl(photo.id);
-  console.log("url", url);
-  console.log("Download url...");
-  await downloadUrl(url, `./downloads/${photo.name}.jpg`);
-  console.log("create lines...");
-  const lines = await createLines(`./downloads/${photo.name}.jpg`);
-  console.log("write file...");
-  writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
+  const photos = await getLatest(store.get("lastCreated"));
+  for (const photo of photos) {
+    console.log("Get image url...");
+    const url = await getImageUrl(photo.id);
+    console.log("url", url);
+    console.log("Download url...");
+    await downloadUrl(url, `./downloads/${photo.name}.jpg`);
+    console.log("create lines...");
+    const lines = await createLines(`./downloads/${photo.name}.jpg`);
+    console.log("write file...");
+
+    writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
+    store.set("lastCreated", Date.parse(photo.created_at) / 1000);
+
+    ssh
+      .putFile(
+        `./output/${photo.name}.json`,
+        `/home/pi/plotter/queue/${photo.name}.json`
+      )
+      .then(
+        function () {
+          console.log("The File thing is done");
+        },
+        function (error) {
+          console.log("Something's wrong");
+          console.log(error);
+        }
+      );
+  }
   console.log("--DONE--");
 };
 

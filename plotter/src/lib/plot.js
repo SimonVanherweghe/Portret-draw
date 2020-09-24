@@ -1,38 +1,50 @@
-const SerialPort = require('serialport');
+const SerialPort = require("serialport");
 
 function sendCommand(command) {
   if (!command) {
     return;
   }
 
-  console.log('[Plotter] Sending message:', command);
-  port.write(command + '\r');
+  console.log("[Plotter] Sending message:", command);
+  port.write(command + "\r");
 }
 
-function plot(device, gcodeCommands) {
-  const commands = [...gcodeCommands];
-  let plot = null;
+const plot = async (device, gcodeCommands) => {
+  return new Promise((resolve, reject) => {
+    const commands = [...gcodeCommands];
+    let plot = null;
 
-  port = new SerialPort(device, {baudRate: 115200}, err => {
-    if (err) {
-      return console.log('Error: ', err.message);
-    }
+    port = new SerialPort(device, { baudRate: 115200 }, (err) => {
+      if (err) {
+        return console.log("Error: ", err.message);
+      }
 
-    console.log("[Plotter] Let's go! Starting in 2 sec...");
-    setTimeout(() => sendCommand(commands.shift()), 2000);
+      console.log("[Plotter] Let's go! Starting in 2 sec...");
+      setTimeout(() => sendCommand(commands.shift()), 2000);
+    });
+
+    port.on("data", (data) => {
+      console.log("[Plotter] Message received:", data.toString());
+
+      if (data.toString().startsWith("ok")) {
+        console.log("commands length:", commands.length);
+        if (commands.length === 0) {
+          console.log("No more commands...");
+          setTimeout(() => {
+            port.close();
+            console.log("Port closed");
+            resolve();
+          }, 5000);
+        }
+        sendCommand(commands.shift());
+      }
+    });
+
+    port.on("error", (err) => {
+      console.log("[Plotter] Error:", err);
+      reject(err);
+    });
   });
+};
 
-  port.on('data', data => {
-    console.log('[Plotter] Message received:', data.toString());
-
-    if (data.toString().startsWith('ok')) {
-      sendCommand(commands.shift());
-    }
-  });
-
-  port.on('error', err => {
-    console.log('[Plotter] Error:', err);
-  });
-}
-
-module.exports = {plot};
+module.exports = { plot };

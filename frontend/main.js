@@ -20,7 +20,7 @@ require("mvp.css");
       (error, result) => {
         console.log(error, result);
         if (result.event === "success") {
-          document.querySelector(".form").removeAttribute("hidden");
+          //document.querySelector(".form").removeAttribute("hidden");
           document.querySelector(".upload").setAttribute("hidden", "true");
         }
       }
