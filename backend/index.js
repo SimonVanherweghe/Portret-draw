@@ -100,56 +100,43 @@ const writeFile = (path, content) => {
 };
 
 const run = async () => {
-  const ssh = new NodeSSH();
+  try {
+    const ssh = new NodeSSH();
+    await ssh.connect({
+      host: "192.168.0.109",
+      username: "pi",
+      password: process.env.RASPBERRY_PASS, //lukt niet met key...
+    });
 
-  ssh.connect({
-    host: "192.168.0.109",
-    username: "pi",
-    privateKey: "/Users/simonvanherweghe/.ssh/raspberrypi",
-    port: 22,
-    tryKeyboard: true,
-    onKeyboardInteractive(
-      name,
-      instructions,
-      instructionsLang,
-      prompts,
-      finish
-    ) {
-      console.log(name, prompts.join("\n"));
-    },
-  });
+    console.log("Get latest...");
+    const photos = await getLatest(store.get("lastCreated"));
+    console.log(photos.length + " new photos");
+    for (const photo of photos) {
+      console.log("Get image url...");
+      const url = await getImageUrl(photo.id);
+      console.log("url", url);
+      console.log("Download url...");
+      await downloadUrl(url, `./downloads/${photo.name}.jpg`);
 
-  console.log("Get latest...");
-  const photos = await getLatest(store.get("lastCreated"));
-  for (const photo of photos) {
-    console.log("Get image url...");
-    const url = await getImageUrl(photo.id);
-    console.log("url", url);
-    console.log("Download url...");
-    await downloadUrl(url, `./downloads/${photo.name}.jpg`);
-    console.log("create lines...");
-    const lines = await createLines(`./downloads/${photo.name}.jpg`);
-    console.log("write file...");
+      console.log("create lines...");
+      const lines = await createLines(`./downloads/${photo.name}.jpg`);
 
-    writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
-    store.set("lastCreated", Date.parse(photo.created_at) / 1000);
+      console.log(`write file ${photo.name}...`);
+      writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
 
-    ssh
-      .putFile(
+      await ssh.putFile(
         `./output/${photo.name}.json`,
         `/home/pi/plotter/queue/${photo.name}.json`
-      )
-      .then(
-        function () {
-          console.log("The File thing is done");
-        },
-        function (error) {
-          console.log("Something's wrong");
-          console.log(error);
-        }
       );
+      console.log(`${photo.name} is copied`);
+
+      store.set("lastCreated", Date.parse(photo.created_at) / 1000);
+    }
+    ssh.dispose();
+    console.log("--DONE--");
+  } catch (e) {
+    console.log(e);
   }
-  console.log("--DONE--");
 };
 
 run();
