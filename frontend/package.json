@@ -7,10 +7,12 @@
     "parcel-bundler": "^1.12.4"
   },
   "scripts": {
+    "start": "yarn dev",
     "dev": "parcel index.html && parcel watch index.html",
     "build": "parcel build index.html"
   },
   "dependencies": {
+    "faunadb": "^3.0.1",
     "mvp.css": "^1.6.2"
   }
 }
