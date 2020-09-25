@@ -20,7 +20,7 @@ cloudinary.config({
 const getImageUrl = async (id) => {
   const url = await cloudinary.url(id, {
     transformation: [
-      { gravity: "faces", width: 500, height: 500, crop: "fill" },
+      { gravity: "faces:center", width: 500, height: 500, crop: "fill" },
     ],
   });
   return url;
@@ -58,12 +58,14 @@ const getLatest = async (since) => {
   try {
     const result = await cloudinary.search
       .expression("created_at>" + since)
+      .sort_by("public_id", "desc")
       .execute();
 
     return result.resources.map((img) => ({
       id: img.public_id,
       name: img.filename,
       created_at: img.created_at,
+      public_id: img.public_id,
     }));
   } catch (e) {
     console.log(e);
@@ -91,11 +93,14 @@ const createLines = async (source) => {
 };
 
 const writeFile = (path, content) => {
-  fs.writeFile(path, content, (err) => {
-    if (err) {
-      return console.log(err);
-    }
-    console.log("The file was saved!");
+  return new Promise((resolve, reject) => {
+    fs.writeFile(path, content, (err) => {
+      if (err) {
+        reject(err);
+      }
+      console.log("The file was saved!");
+      resolve();
+    });
   });
 };
 
@@ -122,7 +127,7 @@ const run = async () => {
       const lines = await createLines(`./downloads/${photo.name}.jpg`);
 
       console.log(`write file ${photo.name}...`);
-      writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
+      await writeFile(`./output/${photo.name}.json`, JSON.stringify(lines));
 
       await ssh.putFile(
         `./output/${photo.name}.json`,
@@ -131,9 +136,11 @@ const run = async () => {
       console.log(`${photo.name} is copied`);
 
       store.set("lastCreated", Date.parse(photo.created_at) / 1000);
+      console.log("Last created:", store.get("lastCreated"));
     }
     ssh.dispose();
     console.log("--DONE--");
+    setTimeout(run, 300000);
   } catch (e) {
     console.log(e);
   }
