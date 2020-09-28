@@ -110,7 +110,7 @@ const run = async () => {
     await ssh.connect({
       host: "192.168.0.109",
       username: "pi",
-      password: process.env.RASPBERRY_PASS, //lukt niet met key...
+      password: process.env.RASPBERRY_PASS, //no success with key...
     });
 
     console.log("Get latest...");
