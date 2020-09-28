@@ -15,7 +15,7 @@ const getQueue = (queuePath, extension) => {
     let sorted = files.sort((a, b) => {
       let s1 = fs.statSync(queuePath + a);
       let s2 = fs.statSync(queuePath + b);
-      return s1.ctime < s2.ctime;
+      return s1.ctime > s2.ctime;
     });
     sorted.forEach((file) => {
       filesWithStats.push({
