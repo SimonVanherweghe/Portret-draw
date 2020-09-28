@@ -4,11 +4,12 @@ const { addCropMarks } = require("./src/lib/cropmarks");
 const { linesToGcode } = require("./src/lib/lines-to-gcode");
 const { getQueue, scale, move } = require("./src/lib/utils");
 const { getBounds2d } = require("./src/lib/get-bounds-2d");
-
+const chokidar = require("chokidar");
+const { resolve } = require("path");
 
 const drawFile = async (file, moveX = 0, moveY = 0) => {
-  console.log("Start drawing ", file.filename, moveX, moveY);
-  const json = fs.readFileSync(file.path);
+  console.log("Start drawing ", file, moveX, moveY);
+  const json = fs.readFileSync(file);
   let lines = JSON.parse(json);
 
   const scaleFactor = 75 / 1024; // polaroid=75, json resolution=1024
@@ -22,9 +23,9 @@ const drawFile = async (file, moveX = 0, moveY = 0) => {
 
   try {
     await plot("/dev/ttyUSB0", commands);
-    console.log("Drawing finished", file.filename);
-    fs.unlinkSync(file.path);
-    console.log("Source removed", file.filename);
+    console.log("Drawing finished", file);
+    fs.unlinkSync(file);
+    console.log("Source removed", file);
     return Promise.resolve();
   } catch (err) {
     console.error(err);
@@ -33,18 +34,25 @@ const drawFile = async (file, moveX = 0, moveY = 0) => {
 
 const waitForSource = () => {
   return new Promise((resolve, reject) => {
-    setTimeout(async () => {
-      const queue = getQueue("./queue/", "json");
-      if (queue.length > 0) {
-        console.log("file found");
-        const file = queue[0];
+    const queue = getQueue("./queue/", "json");
+    if (queue.length > 0) {
+      console.log("file found");
+      const file = queue[0];
+      resolve(file);
+    } else {
+      console.log("No file found, entering watch mode");
+      const watcher = chokidar.watch("queue/*.json", {
+        ignored: /(^|[\/\\])\../, // ignore dotfiles
+        persistent: true,
+      });
+      watcher.on("add", (file) => {
+        console.log(`File ${file} has been added`);
+        watcher.close();
+        console.log("New file, stopping watch mode");
         resolve(file);
-      } else {
-        console.log("no files");
-        const result = waitForSource();
-        result ? resolve(result) : reject();
-      }
-    }, 60000);
+      });
+      watcher.on("error", (err) => reject(err));
+    }
   });
 };
 
